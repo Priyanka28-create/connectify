@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Connectify</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            padding: 14px 24px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+        }
+        .back-btn {
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .navbar h2 { font-size: 1.1rem; flex: 1; }
+        .online-count {
+            font-size: 0.8rem;
+            color: #4ade80;
+            background: rgba(74,222,128,0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(74,222,128,0.2);
+        }
+        .logout {
+            padding: 8px 14px;
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px;
+            color: #ef4444;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(100vh - 57px);
+        }
+        .sidebar {
+            width: 220px;
+            background: rgba(255,255,255,0.03);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding: 20px 16px;
+            overflow-y: auto;
+        }
+        .sidebar h4 {
+            color: #666;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-bottom: 4px;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+        .user-name { color: #ccc; font-size: 0.88rem; }
+        .dot {
+            width: 8px; height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message { display: flex; gap: 12px; max-width: 75%; }
+        .message.own { align-self: flex-end; flex-direction: row-reverse; }
+        .message.other { align-self: flex-start; }
+        .msg-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            align-self: flex-end;
+        }
+        .msg-content { display: flex; flex-direction: column; gap: 4px; }
+        .message.own .msg-content { align-items: flex-end; }
+        .msg-sender { font-size: 0.75rem; color: #666; }
+        .bubble {
+            padding: 10px 16px;
+            border-radius: 18px;
+            font-size: 0.93rem;
+            line-height: 1.5;
+            color: white;
+            position: relative;
+        }
+        .message.own .bubble {
+            background: linear-gradient(135deg, #7c3aed, #3478f6);
+            border-bottom-right-radius: 4px;
+        }
+        .message.other .bubble {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-bottom-left-radius: 4px;
+        }
+        .msg-time { font-size: 0.7rem; color: #555; }
+        .system-msg {
+            text-align: center;
+            color: #555;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            align-self: center;
+        }
+        .typing-indicator {
+            padding: 0 24px 8px;
+            color: #666;
+            font-size: 0.8rem;
+            min-height: 24px;
+            font-style: italic;
+        }
+        .chat-input-area {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 13px 18px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .chat-input-area input:focus { border-color: #7c3aed; }
+        .send-btn {
+            padding: 13px 22px;
+            background: linear-gradient(135deg, #7c3aed, #3478f6);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .send-btn:hover { opacity: 0.85; }
+        .messages::-webkit-scrollbar { width: 4px; }
+        .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        ::placeholder { color: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="back-btn">← Back</a>
+        <h2>💬 <span th:text="${room.name}"></span></h2>
+        <span class="online-count" id="onlineCount">● Online</span>
+        <a href="/logout" class="logout">Logout</a>
+    </nav>
+
+    <div class="main">
+        <div class="sidebar">
+            <h4>Online Users</h4>
+            <div id="usersList">
+                <div th:each="user : ${onlineUsers}" class="user-item">
+                    <div class="avatar" th:style="'background:' + ${user.avatarColor}"
+                         th:text="${#strings.substring(user.displayName, 0, 1)}"></div>
+                    <span class="user-name" th:text="${user.displayName}"></span>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="messages" id="messages">
+                <!-- Message History -->
+                <div th:each="msg : ${messages}"
+                     th:classappend="${msg.sender.username == currentUser.username} ? 'own' : 'other'"
+                     class="message">
+                    <div class="msg-avatar"
+                         th:style="'background:' + ${msg.sender.avatarColor}"
+                         th:text="${#strings.substring(msg.sender.displayName, 0, 1)}"></div>
+                    <div class="msg-content">
+                        <span class="msg-sender" th:text="${msg.sender.displayName}"></span>
+                        <div class="bubble" th:text="${msg.content}"></div>
+                        <span class="msg-time" th:text="${#temporals.format(msg.createdAt, 'hh:mm a')}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator"></div>
+
+            <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Type a message..."/>
+                <button class="send-btn" onclick="sendMessage()">Send ➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const roomName = [[${room.name}]];
+        const currentUser = [[${currentUser.displayName}]];
+        const currentUsername = [[${currentUser.username}]];
+        let stompClient = null;
+        let typingTimer = null;
+
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+            stompClient.connect({}, function() {
+                stompClient.subscribe('/topic/' + roomName, onMessageReceived);
+                stompClient.subscribe('/topic/' + roomName + '.typing', onTyping);
+                stompClient.send("/app/chat.addUser", {},
+                    JSON.stringify({sender: currentUser, room: roomName, type: 'JOIN'}));
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (content && stompClient) {
+                stompClient.send("/app/chat.sendMessage", {},
+                    JSON.stringify({
+                        sender: currentUser,
+                        content: content,
+                        room: roomName,
+                        type: 'CHAT'
+                    }));
+                input.value = '';
+            }
+        }
+
+        function onMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+            const messagesDiv = document.getElementById('messages');
+
+            if (message.type === 'JOIN' || message.type === 'LEAVE') {
+                const div = document.createElement('div');
+                div.className = 'system-msg';
+                div.textContent = message.type === 'JOIN'
+                    ? `${message.sender} joined the room 👋`
+                    : `${message.sender} left the room`;
+                messagesDiv.appendChild(div);
+            } else {
+                const isOwn = message.sender === currentUser;
+                const initial = message.sender.charAt(0).toUpperCase();
+                const div = document.createElement('div');
+                div.className = `message ${isOwn ? 'own' : 'other'}`;
+                div.innerHTML = `
+                    <div class="msg-avatar" style="background:${message.avatarColor}">${initial}</div>
+                    <div class="msg-content">
+                        <span class="msg-sender">${message.sender}</span>
+                        <div class="bubble">${message.content}</div>
+                        <span class="msg-time">${message.timestamp || ''}</span>
+                    </div>
+                `;
+                messagesDiv.appendChild(div);
+            }
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function onTyping(payload) {
+            const message = JSON.parse(payload.body);
+            const indicator = document.getElementById('typingIndicator');
+            if (message.sender !== currentUser) {
+                if (message.type === 'TYPING') {
+                    indicator.textContent = `${message.sender} is typing...`;
+                } else {
+                    indicator.textContent = '';
+                }
+            }
+        }
+
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            } else {
+                if (stompClient) {
+                    stompClient.send("/app/chat.typing", {},
+                        JSON.stringify({sender: currentUser, room: roomName, type: 'TYPING'}));
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(() => {
+                        stompClient.send("/app/chat.typing", {},
+                            JSON.stringify({sender: currentUser, room: roomName, type: 'STOP_TYPING'}));
+                    }, 2000);
+                }
+            }
+        });
+
+        window.onload = function() {
+            connect();
+            const messages = document.getElementById('messages');
+            messages.scrollTop = messages.scrollHeight;
+        };
+    </script>
+</body>
+</html>
