@@ -41,7 +41,7 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
         .back-btn {
             padding: 8px 14px;
@@ -51,7 +51,27 @@
             text-decoration: none;
             font-size: 0.85rem;
         }
-        .navbar h2 { font-size: 1.1rem; flex: 1; color: var(--text); }
+        .navbar h2 { font-size: 1.1rem; color: var(--text); }
+        .search-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 14px;
+            gap: 8px;
+            max-width: 300px;
+            margin-left: auto;
+        }
+        .search-box input {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+        }
         .online-count {
             font-size: 0.8rem;
             color: #4ade80;
@@ -59,6 +79,7 @@
             padding: 4px 10px;
             border-radius: 20px;
             border: 1px solid rgba(74,222,128,0.2);
+            white-space: nowrap;
         }
         .theme-btn {
             padding: 8px 14px;
@@ -77,6 +98,7 @@
             color: #ef4444;
             text-decoration: none;
             font-size: 0.85rem;
+            white-space: nowrap;
         }
         .main {
             display: flex;
@@ -131,6 +153,7 @@
         .message { display: flex; gap: 12px; max-width: 75%; position: relative; }
         .message.own { align-self: flex-end; flex-direction: row-reverse; }
         .message.other { align-self: flex-start; }
+        .message.hidden { display: none; }
         .msg-avatar {
             width: 36px; height: 36px;
             border-radius: 50%;
@@ -166,12 +189,7 @@
             border-bottom-left-radius: 4px;
         }
         .msg-time { font-size: 0.7rem; color: var(--text-muted); }
-        .reactions {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
+        .reactions { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
         .reaction-badge {
             background: var(--input-bg);
             border: 1px solid var(--border);
@@ -195,13 +213,30 @@
             left: 0;
         }
         .reaction-menu.show { display: flex; }
-        .reaction-opt {
-            font-size: 1.3rem;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-        }
+        .reaction-opt { font-size: 1.3rem; cursor: pointer; padding: 4px; border-radius: 6px; }
         .reaction-opt:hover { background: rgba(124,58,237,0.3); }
+        .img-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            cursor: pointer;
+            object-fit: cover;
+        }
+        .file-bubble {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 18px;
+            background: var(--bubble-other);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .message.own .file-bubble {
+            background: linear-gradient(135deg, #7c3aed, #3478f6);
+            color: white;
+        }
         .system-msg {
             text-align: center;
             color: var(--text-muted);
@@ -222,7 +257,7 @@
             padding: 16px 24px;
             border-top: 1px solid var(--border);
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
             position: relative;
         }
@@ -241,22 +276,18 @@
             z-index: 100;
         }
         .emoji-picker.show { display: flex; }
-        .emoji-opt {
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-        }
+        .emoji-opt { font-size: 1.4rem; cursor: pointer; padding: 4px; border-radius: 6px; }
         .emoji-opt:hover { background: rgba(124,58,237,0.3); }
-        .emoji-btn {
+        .emoji-btn, .file-btn {
             padding: 10px 13px;
             background: var(--input-bg);
             border: 1px solid var(--border);
             border-radius: 12px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
+            color: var(--text);
         }
-        .chat-input-area input {
+        .chat-input-area input[type="text"] {
             flex: 1;
             padding: 13px 18px;
             background: var(--input-bg);
@@ -266,7 +297,7 @@
             font-size: 0.95rem;
             outline: none;
         }
-        .chat-input-area input:focus { border-color: #7c3aed; }
+        .chat-input-area input[type="text"]:focus { border-color: #7c3aed; }
         .send-btn {
             padding: 13px 22px;
             background: linear-gradient(135deg, #7c3aed, #3478f6);
@@ -276,15 +307,21 @@
             font-size: 1rem;
             cursor: pointer;
         }
+        .send-btn:hover { opacity: 0.85; }
         .messages::-webkit-scrollbar { width: 4px; }
         .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
         ::placeholder { color: rgba(255,255,255,0.2); }
+        .highlight { background: rgba(255,220,0,0.3) !important; border-radius: 4px; }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <a href="/" class="back-btn">← Back</a>
         <h2>💬 <span th:text="${room.name}"></span></h2>
+        <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="searchInput" placeholder="Search messages..." oninput="searchMessages()"/>
+        </div>
         <span class="online-count">● Online</span>
         <button class="theme-btn" onclick="toggleTheme()">🌙</button>
         <a href="/logout" class="logout">Logout</a>
@@ -357,6 +394,8 @@
                     <span class="emoji-opt" onclick="addEmoji('🤝')">🤝</span>
                 </div>
                 <button class="emoji-btn" onclick="toggleEmoji()">😊</button>
+                <button class="file-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+                <input type="file" id="fileInput" style="display:none" onchange="uploadFile(this)"/>
                 <input type="text" id="messageInput" placeholder="Type a message..."/>
                 <button class="send-btn" onclick="sendMessage()">Send ➤</button>
             </div>
@@ -382,12 +421,57 @@
         }
 
         function addEmoji(emoji) {
-            const input = document.getElementById('messageInput');
-            input.value += emoji;
-            input.focus();
+            document.getElementById('messageInput').value += emoji;
+            document.getElementById('messageInput').focus();
             document.getElementById('emojiPicker').classList.remove('show');
         }
 
+        // File Upload
+        async function uploadFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (stompClient) {
+                const isImage = file.type.startsWith('image/');
+                stompClient.send("/app/chat.sendMessage", {},
+                    JSON.stringify({
+                        sender: currentUser,
+                        content: isImage ? '📷 ' + file.name : '📎 ' + file.name,
+                        fileUrl: data.url,
+                        fileType: file.type,
+                        room: roomName,
+                        type: 'CHAT'
+                    }));
+            }
+            input.value = '';
+        }
+
+        // Search
+        function searchMessages() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.message').forEach(msg => {
+                const bubble = msg.querySelector('.bubble');
+                if (!bubble) return;
+                const text = bubble.textContent.toLowerCase();
+                if (query === '') {
+                    msg.classList.remove('hidden');
+                    bubble.classList.remove('highlight');
+                } else if (text.includes(query)) {
+                    msg.classList.remove('hidden');
+                    bubble.classList.add('highlight');
+                } else {
+                    msg.classList.add('hidden');
+                }
+            });
+        }
+
+        // Reactions
         const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
         function showReactionMenu(msgDiv) {
@@ -410,7 +494,7 @@
 
         function addReaction(msgDiv, emoji) {
             const reactionsDiv = msgDiv.querySelector('.reactions');
-            const existing = reactionsDiv.querySelector(`[data-emoji="${emoji}"]`);
+            const existing = reactionsDiv.querySelector('[data-emoji="' + emoji + '"]');
             if (existing) {
                 const count = parseInt(existing.dataset.count) + 1;
                 existing.dataset.count = count;
@@ -448,32 +532,49 @@
             }
         }
 
+        function appendMessage(message, isOwn) {
+            const messagesDiv = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = 'message ' + (isOwn ? 'own' : 'other');
+            const initial = message.sender.charAt(0).toUpperCase();
+            const avatarColor = message.avatarColor || '#7c3aed';
+
+            let contentHtml = '';
+            if (message.fileUrl) {
+                const isImage = message.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                if (isImage) {
+                    contentHtml = '<img src="' + message.fileUrl + '" class="img-preview" onclick="window.open(this.src)"/>';
+                } else {
+                    contentHtml = '<a href="' + message.fileUrl + '" class="file-bubble" download>📎 ' + message.content.replace('📎 ', '') + '</a>';
+                }
+            } else {
+                contentHtml = '<div class="bubble" ondblclick="showReactionMenu(this.closest(\'.message\'))">' + message.content + '</div>';
+            }
+
+            div.innerHTML =
+                '<div class="msg-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
+                '<div class="msg-content">' +
+                '<span class="msg-sender">' + message.sender + '</span>' +
+                contentHtml +
+                '<span class="msg-time">' + (message.timestamp || '') + '</span>' +
+                '<div class="reactions"></div>' +
+                '</div>';
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
         function onMessageReceived(payload) {
             const message = JSON.parse(payload.body);
-            const messagesDiv = document.getElementById('messages');
             if (message.type === 'JOIN' || message.type === 'LEAVE') {
                 const div = document.createElement('div');
                 div.className = 'system-msg';
                 div.textContent = message.type === 'JOIN'
                     ? message.sender + ' joined the room 👋'
                     : message.sender + ' left the room';
-                messagesDiv.appendChild(div);
+                document.getElementById('messages').appendChild(div);
             } else {
-                const isOwn = message.sender === currentUser;
-                const div = document.createElement('div');
-                div.className = 'message ' + (isOwn ? 'own' : 'other');
-                const initial = message.sender.charAt(0).toUpperCase();
-                div.innerHTML =
-                    '<div class="msg-avatar" style="background:' + (message.avatarColor || '#7c3aed') + '">' + initial + '</div>' +
-                    '<div class="msg-content">' +
-                    '<span class="msg-sender">' + message.sender + '</span>' +
-                    '<div class="bubble" ondblclick="showReactionMenu(this.closest(\'.message\'))">' + message.content + '</div>' +
-                    '<span class="msg-time">' + (message.timestamp || '') + '</span>' +
-                    '<div class="reactions"></div>' +
-                    '</div>';
-                messagesDiv.appendChild(div);
+                appendMessage(message, message.sender === currentUser);
             }
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         function onTyping(payload) {
@@ -481,8 +582,7 @@
             const indicator = document.getElementById('typingIndicator');
             if (message.sender !== currentUser) {
                 indicator.textContent = message.type === 'TYPING'
-                    ? message.sender + ' is typing...'
-                    : '';
+                    ? message.sender + ' is typing...' : '';
             }
         }
 
