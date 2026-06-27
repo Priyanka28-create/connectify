@@ -7,32 +7,51 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --card: rgba(255,255,255,0.05);
+            --border: rgba(255,255,255,0.1);
+            --text: white;
+            --text-muted: #888;
+            --bubble-other: rgba(255,255,255,0.08);
+            --input-bg: rgba(255,255,255,0.07);
+        }
+        .light-mode {
+            --bg: linear-gradient(135deg, #e8eaf6, #e3f2fd, #f3e5f5);
+            --card: rgba(255,255,255,0.8);
+            --border: rgba(0,0,0,0.1);
+            --text: #1a1a2e;
+            --text-muted: #666;
+            --bubble-other: rgba(0,0,0,0.06);
+            --input-bg: rgba(0,0,0,0.05);
+        }
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background: var(--bg);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            color: var(--text);
+            transition: all 0.3s;
         }
         .navbar {
             padding: 14px 24px;
-            background: rgba(255,255,255,0.05);
+            background: var(--card);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 16px;
-            color: white;
         }
         .back-btn {
             padding: 8px 14px;
-            background: rgba(255,255,255,0.08);
+            background: var(--input-bg);
             border-radius: 8px;
-            color: white;
+            color: var(--text);
             text-decoration: none;
             font-size: 0.85rem;
         }
-        .navbar h2 { font-size: 1.1rem; flex: 1; }
+        .navbar h2 { font-size: 1.1rem; flex: 1; color: var(--text); }
         .online-count {
             font-size: 0.8rem;
             color: #4ade80;
@@ -40,6 +59,15 @@
             padding: 4px 10px;
             border-radius: 20px;
             border: 1px solid rgba(74,222,128,0.2);
+        }
+        .theme-btn {
+            padding: 8px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1rem;
         }
         .logout {
             padding: 8px 14px;
@@ -58,13 +86,13 @@
         }
         .sidebar {
             width: 220px;
-            background: rgba(255,255,255,0.03);
-            border-right: 1px solid rgba(255,255,255,0.08);
+            background: var(--card);
+            border-right: 1px solid var(--border);
             padding: 20px 16px;
             overflow-y: auto;
         }
         .sidebar h4 {
-            color: #666;
+            color: var(--text-muted);
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -79,8 +107,7 @@
             margin-bottom: 4px;
         }
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -90,20 +117,9 @@
             color: white;
             flex-shrink: 0;
         }
-        .user-name { color: #ccc; font-size: 0.88rem; }
-        .dot {
-            width: 8px; height: 8px;
-            background: #4ade80;
-            border-radius: 50%;
-            margin-left: auto;
-            flex-shrink: 0;
-        }
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        .user-name { color: var(--text-muted); font-size: 0.88rem; }
+        .dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; margin-left: auto; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -112,7 +128,7 @@
             flex-direction: column;
             gap: 16px;
         }
-        .message { display: flex; gap: 12px; max-width: 75%; }
+        .message { display: flex; gap: 12px; max-width: 75%; position: relative; }
         .message.own { align-self: flex-end; flex-direction: row-reverse; }
         .message.other { align-self: flex-start; }
         .msg-avatar {
@@ -129,58 +145,126 @@
         }
         .msg-content { display: flex; flex-direction: column; gap: 4px; }
         .message.own .msg-content { align-items: flex-end; }
-        .msg-sender { font-size: 0.75rem; color: #666; }
+        .msg-sender { font-size: 0.75rem; color: var(--text-muted); }
         .bubble {
             padding: 10px 16px;
             border-radius: 18px;
             font-size: 0.93rem;
             line-height: 1.5;
-            color: white;
+            color: var(--text);
             position: relative;
+            cursor: pointer;
         }
         .message.own .bubble {
             background: linear-gradient(135deg, #7c3aed, #3478f6);
+            color: white;
             border-bottom-right-radius: 4px;
         }
         .message.other .bubble {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bubble-other);
+            border: 1px solid var(--border);
             border-bottom-left-radius: 4px;
         }
-        .msg-time { font-size: 0.7rem; color: #555; }
+        .msg-time { font-size: 0.7rem; color: var(--text-muted); }
+        .reactions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .reaction-badge {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .reaction-menu {
+            display: none;
+            position: absolute;
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            gap: 4px;
+            flex-wrap: wrap;
+            width: 200px;
+            z-index: 100;
+            bottom: 110%;
+            left: 0;
+        }
+        .reaction-menu.show { display: flex; }
+        .reaction-opt {
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .reaction-opt:hover { background: rgba(124,58,237,0.3); }
         .system-msg {
             text-align: center;
-            color: #555;
+            color: var(--text-muted);
             font-size: 0.8rem;
             padding: 4px 12px;
-            background: rgba(255,255,255,0.03);
+            background: var(--input-bg);
             border-radius: 20px;
             align-self: center;
         }
         .typing-indicator {
             padding: 0 24px 8px;
-            color: #666;
+            color: var(--text-muted);
             font-size: 0.8rem;
             min-height: 24px;
             font-style: italic;
         }
         .chat-input-area {
             padding: 16px 24px;
-            border-top: 1px solid rgba(255,255,255,0.08);
+            border-top: 1px solid var(--border);
             display: flex;
             gap: 12px;
             align-items: center;
+            position: relative;
+        }
+        .emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 70px;
+            left: 24px;
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px;
+            width: 300px;
+            flex-wrap: wrap;
+            gap: 4px;
+            z-index: 100;
+        }
+        .emoji-picker.show { display: flex; }
+        .emoji-opt {
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .emoji-opt:hover { background: rgba(124,58,237,0.3); }
+        .emoji-btn {
+            padding: 10px 13px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1.2rem;
+            cursor: pointer;
         }
         .chat-input-area input {
             flex: 1;
             padding: 13px 18px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: var(--input-bg);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            color: white;
+            color: var(--text);
             font-size: 0.95rem;
             outline: none;
-            transition: border 0.3s;
         }
         .chat-input-area input:focus { border-color: #7c3aed; }
         .send-btn {
@@ -191,9 +275,7 @@
             color: white;
             font-size: 1rem;
             cursor: pointer;
-            transition: opacity 0.3s;
         }
-        .send-btn:hover { opacity: 0.85; }
         .messages::-webkit-scrollbar { width: 4px; }
         .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
         ::placeholder { color: rgba(255,255,255,0.2); }
@@ -203,7 +285,8 @@
     <nav class="navbar">
         <a href="/" class="back-btn">← Back</a>
         <h2>💬 <span th:text="${room.name}"></span></h2>
-        <span class="online-count" id="onlineCount">● Online</span>
+        <span class="online-count">● Online</span>
+        <button class="theme-btn" onclick="toggleTheme()">🌙</button>
         <a href="/logout" class="logout">Logout</a>
     </nav>
 
@@ -212,7 +295,8 @@
             <h4>Online Users</h4>
             <div id="usersList">
                 <div th:each="user : ${onlineUsers}" class="user-item">
-                    <div class="avatar" th:style="'background:' + ${user.avatarColor}"
+                    <div class="avatar"
+                         th:style="'background:' + ${user.avatarColor}"
                          th:text="${#strings.substring(user.displayName, 0, 1)}"></div>
                     <span class="user-name" th:text="${user.displayName}"></span>
                     <div class="dot"></div>
@@ -222,7 +306,6 @@
 
         <div class="chat-area">
             <div class="messages" id="messages">
-                <!-- Message History -->
                 <div th:each="msg : ${messages}"
                      th:classappend="${msg.sender.username == currentUser.username} ? 'own' : 'other'"
                      class="message">
@@ -233,6 +316,7 @@
                         <span class="msg-sender" th:text="${msg.sender.displayName}"></span>
                         <div class="bubble" th:text="${msg.content}"></div>
                         <span class="msg-time" th:text="${#temporals.format(msg.createdAt, 'hh:mm a')}"></span>
+                        <div class="reactions"></div>
                     </div>
                 </div>
             </div>
@@ -240,6 +324,39 @@
             <div class="typing-indicator" id="typingIndicator"></div>
 
             <div class="chat-input-area">
+                <div class="emoji-picker" id="emojiPicker">
+                    <span class="emoji-opt" onclick="addEmoji('😀')">😀</span>
+                    <span class="emoji-opt" onclick="addEmoji('😂')">😂</span>
+                    <span class="emoji-opt" onclick="addEmoji('😍')">😍</span>
+                    <span class="emoji-opt" onclick="addEmoji('🥰')">🥰</span>
+                    <span class="emoji-opt" onclick="addEmoji('😎')">😎</span>
+                    <span class="emoji-opt" onclick="addEmoji('😭')">😭</span>
+                    <span class="emoji-opt" onclick="addEmoji('😤')">😤</span>
+                    <span class="emoji-opt" onclick="addEmoji('🤔')">🤔</span>
+                    <span class="emoji-opt" onclick="addEmoji('👍')">👍</span>
+                    <span class="emoji-opt" onclick="addEmoji('👎')">👎</span>
+                    <span class="emoji-opt" onclick="addEmoji('❤️')">❤️</span>
+                    <span class="emoji-opt" onclick="addEmoji('🔥')">🔥</span>
+                    <span class="emoji-opt" onclick="addEmoji('🎉')">🎉</span>
+                    <span class="emoji-opt" onclick="addEmoji('💯')">💯</span>
+                    <span class="emoji-opt" onclick="addEmoji('🙏')">🙏</span>
+                    <span class="emoji-opt" onclick="addEmoji('😊')">😊</span>
+                    <span class="emoji-opt" onclick="addEmoji('🤣')">🤣</span>
+                    <span class="emoji-opt" onclick="addEmoji('😅')">😅</span>
+                    <span class="emoji-opt" onclick="addEmoji('🥳')">🥳</span>
+                    <span class="emoji-opt" onclick="addEmoji('💪')">💪</span>
+                    <span class="emoji-opt" onclick="addEmoji('✨')">✨</span>
+                    <span class="emoji-opt" onclick="addEmoji('🫶')">🫶</span>
+                    <span class="emoji-opt" onclick="addEmoji('😴')">😴</span>
+                    <span class="emoji-opt" onclick="addEmoji('🤯')">🤯</span>
+                    <span class="emoji-opt" onclick="addEmoji('😱')">😱</span>
+                    <span class="emoji-opt" onclick="addEmoji('🤩')">🤩</span>
+                    <span class="emoji-opt" onclick="addEmoji('😏')">😏</span>
+                    <span class="emoji-opt" onclick="addEmoji('💀')">💀</span>
+                    <span class="emoji-opt" onclick="addEmoji('👀')">👀</span>
+                    <span class="emoji-opt" onclick="addEmoji('🤝')">🤝</span>
+                </div>
+                <button class="emoji-btn" onclick="toggleEmoji()">😊</button>
                 <input type="text" id="messageInput" placeholder="Type a message..."/>
                 <button class="send-btn" onclick="sendMessage()">Send ➤</button>
             </div>
@@ -252,6 +369,62 @@
         const currentUsername = [[${currentUser.username}]];
         let stompClient = null;
         let typingTimer = null;
+        let isDark = true;
+
+        function toggleTheme() {
+            isDark = !isDark;
+            document.body.classList.toggle('light-mode');
+            document.querySelector('.theme-btn').textContent = isDark ? '🌙' : '☀️';
+        }
+
+        function toggleEmoji() {
+            document.getElementById('emojiPicker').classList.toggle('show');
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+            document.getElementById('emojiPicker').classList.remove('show');
+        }
+
+        const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
+
+        function showReactionMenu(msgDiv) {
+            document.querySelectorAll('.reaction-menu.show').forEach(m => m.classList.remove('show'));
+            let menu = msgDiv.querySelector('.reaction-menu');
+            if (!menu) {
+                menu = document.createElement('div');
+                menu.className = 'reaction-menu';
+                reactionEmojis.forEach(r => {
+                    const span = document.createElement('span');
+                    span.className = 'reaction-opt';
+                    span.textContent = r;
+                    span.onclick = (e) => { e.stopPropagation(); addReaction(msgDiv, r); };
+                    menu.appendChild(span);
+                });
+                msgDiv.querySelector('.msg-content').appendChild(menu);
+            }
+            menu.classList.toggle('show');
+        }
+
+        function addReaction(msgDiv, emoji) {
+            const reactionsDiv = msgDiv.querySelector('.reactions');
+            const existing = reactionsDiv.querySelector(`[data-emoji="${emoji}"]`);
+            if (existing) {
+                const count = parseInt(existing.dataset.count) + 1;
+                existing.dataset.count = count;
+                existing.textContent = emoji + ' ' + count;
+            } else {
+                const badge = document.createElement('span');
+                badge.className = 'reaction-badge';
+                badge.dataset.emoji = emoji;
+                badge.dataset.count = 1;
+                badge.textContent = emoji + ' 1';
+                reactionsDiv.appendChild(badge);
+            }
+            msgDiv.querySelector('.reaction-menu').classList.remove('show');
+        }
 
         function connect() {
             const socket = new SockJS('/ws');
@@ -270,12 +443,7 @@
             const content = input.value.trim();
             if (content && stompClient) {
                 stompClient.send("/app/chat.sendMessage", {},
-                    JSON.stringify({
-                        sender: currentUser,
-                        content: content,
-                        room: roomName,
-                        type: 'CHAT'
-                    }));
+                    JSON.stringify({sender: currentUser, content: content, room: roomName, type: 'CHAT'}));
                 input.value = '';
             }
         }
@@ -283,27 +451,26 @@
         function onMessageReceived(payload) {
             const message = JSON.parse(payload.body);
             const messagesDiv = document.getElementById('messages');
-
             if (message.type === 'JOIN' || message.type === 'LEAVE') {
                 const div = document.createElement('div');
                 div.className = 'system-msg';
                 div.textContent = message.type === 'JOIN'
-                    ? `${message.sender} joined the room 👋`
-                    : `${message.sender} left the room`;
+                    ? message.sender + ' joined the room 👋'
+                    : message.sender + ' left the room';
                 messagesDiv.appendChild(div);
             } else {
                 const isOwn = message.sender === currentUser;
-                const initial = message.sender.charAt(0).toUpperCase();
                 const div = document.createElement('div');
-                div.className = `message ${isOwn ? 'own' : 'other'}`;
-                div.innerHTML = `
-                    <div class="msg-avatar" style="background:${message.avatarColor}">${initial}</div>
-                    <div class="msg-content">
-                        <span class="msg-sender">${message.sender}</span>
-                        <div class="bubble">${message.content}</div>
-                        <span class="msg-time">${message.timestamp || ''}</span>
-                    </div>
-                `;
+                div.className = 'message ' + (isOwn ? 'own' : 'other');
+                const initial = message.sender.charAt(0).toUpperCase();
+                div.innerHTML =
+                    '<div class="msg-avatar" style="background:' + (message.avatarColor || '#7c3aed') + '">' + initial + '</div>' +
+                    '<div class="msg-content">' +
+                    '<span class="msg-sender">' + message.sender + '</span>' +
+                    '<div class="bubble" ondblclick="showReactionMenu(this.closest(\'.message\'))">' + message.content + '</div>' +
+                    '<span class="msg-time">' + (message.timestamp || '') + '</span>' +
+                    '<div class="reactions"></div>' +
+                    '</div>';
                 messagesDiv.appendChild(div);
             }
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -313,34 +480,38 @@
             const message = JSON.parse(payload.body);
             const indicator = document.getElementById('typingIndicator');
             if (message.sender !== currentUser) {
-                if (message.type === 'TYPING') {
-                    indicator.textContent = `${message.sender} is typing...`;
-                } else {
-                    indicator.textContent = '';
-                }
+                indicator.textContent = message.type === 'TYPING'
+                    ? message.sender + ' is typing...'
+                    : '';
             }
         }
 
         document.getElementById('messageInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
-            } else {
-                if (stompClient) {
+            } else if (stompClient) {
+                stompClient.send("/app/chat.typing", {},
+                    JSON.stringify({sender: currentUser, room: roomName, type: 'TYPING'}));
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
                     stompClient.send("/app/chat.typing", {},
-                        JSON.stringify({sender: currentUser, room: roomName, type: 'TYPING'}));
-                    clearTimeout(typingTimer);
-                    typingTimer = setTimeout(() => {
-                        stompClient.send("/app/chat.typing", {},
-                            JSON.stringify({sender: currentUser, room: roomName, type: 'STOP_TYPING'}));
-                    }, 2000);
-                }
+                        JSON.stringify({sender: currentUser, room: roomName, type: 'STOP_TYPING'}));
+                }, 2000);
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.emoji-btn') && !e.target.closest('.emoji-picker')) {
+                document.getElementById('emojiPicker').classList.remove('show');
+            }
+            if (!e.target.closest('.bubble') && !e.target.closest('.reaction-menu')) {
+                document.querySelectorAll('.reaction-menu.show').forEach(m => m.classList.remove('show'));
             }
         });
 
         window.onload = function() {
             connect();
-            const messages = document.getElementById('messages');
-            messages.scrollTop = messages.scrollHeight;
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         };
     </script>
 </body>
