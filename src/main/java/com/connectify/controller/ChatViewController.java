@@ -30,8 +30,10 @@ public class ChatViewController {
     @GetMapping("/")
     public String home(Model model, Principal principal) {
         List<ChatRoom> rooms = chatRoomService.getAllRooms();
+        User currentUser = userService.findByUsername(principal.getName()).orElse(null);
         model.addAttribute("rooms", rooms);
         model.addAttribute("username", principal.getName());
+        model.addAttribute("currentUser", currentUser);
         return "home";
     }
 
@@ -63,17 +65,17 @@ public class ChatViewController {
     }
 
     @PostMapping("/register")
-public String registerPost(@RequestParam String username,
-                           @RequestParam String password,
-                           @RequestParam String displayName,
-                           Model model) {
-    if (userService.existsByUsername(username)) {
-        model.addAttribute("error", "Username already taken!");
-        return "register";
+    public String registerPost(@RequestParam String username,
+                               @RequestParam String password,
+                               @RequestParam String displayName,
+                               Model model) {
+        if (userService.existsByUsername(username)) {
+            model.addAttribute("error", "Username already taken!");
+            return "register";
+        }
+        userService.register(username, password, displayName);
+        return "redirect:/login?registered";
     }
-    userService.register(username, password, displayName);
-    return "redirect:/login?registered";
-}
 
     @PostMapping("/room/create")
     public String createRoom(@RequestParam String name,
@@ -82,5 +84,21 @@ public String registerPost(@RequestParam String username,
             chatRoomService.createRoom(name, description);
         }
         return "redirect:/chat/" + name;
+    }
+
+    @GetMapping("/profile")
+    public String profile(Model model, Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        model.addAttribute("user", user);
+        return "profile";
+    }
+
+    @PostMapping("/profile")
+    public String updateProfile(@RequestParam String displayName,
+                                @RequestParam String bio,
+                                @RequestParam(required = false) String avatarColor,
+                                Principal principal) {
+        userService.updateProfile(principal.getName(), displayName, bio, avatarColor);
+        return "redirect:/profile?updated";
     }
 }

@@ -22,15 +22,17 @@
         }
         .navbar h1 { font-size: 1.5rem; }
         .navbar span { color: #888; font-size: 0.9rem; }
+
         .logout {
-            padding: 8px 16px;
-            background: rgba(239,68,68,0.2);
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 8px;
-            color: #ef4444;
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #7c3aed, #3478f6);
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(124,58,237,0.5);
+}
         .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
         h2 { font-size: 1.8rem; margin-bottom: 8px; }
         .subtitle { color: #888; margin-bottom: 32px; }
@@ -94,11 +96,12 @@
 </head>
 <body>
     <nav class="navbar">
-        <h1>💬 Connectify</h1>
-        <span>Welcome, <strong th:text="${username}"></strong></span>
+    <h1>💬 Connectify</h1>
+    <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
+        <a href="/profile" style="padding: 8px 16px; background: linear-gradient(135deg, #7c3aed, #3478f6); border-radius: 8px; color: white; text-decoration: none; font-size: 0.85rem; font-weight: 600; box-shadow: 0 0 15px rgba(124,58,237,0.5);">👤 Profile</a>
         <a href="/logout" class="logout">Logout</a>
-    </nav>
-
+    </div>
+</nav>
     <div class="container">
         <h2>Chat Rooms</h2>
         <p class="subtitle">Pick a room and start chatting!</p>

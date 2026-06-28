@@ -72,12 +72,10 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login")
                 .permitAll()
             )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/ws/**", "/h2-console/**")
-            )
-            .headers(headers -> headers
-                .frameOptions(frame -> frame.disable())
-            );
+            .csrf(csrf -> csrf.disable())
+.headers(headers -> headers
+    .frameOptions(frame -> frame.disable())
+);
         return http.build();
     }
 }

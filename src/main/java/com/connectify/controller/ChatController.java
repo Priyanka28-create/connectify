@@ -2,7 +2,6 @@ package com.connectify.controller;
 
 import com.connectify.model.ChatMessage;
 import com.connectify.model.ChatRoom;
-import com.connectify.model.Message;
 import com.connectify.model.User;
 import com.connectify.service.ChatRoomService;
 import com.connectify.service.MessageService;
@@ -34,7 +33,7 @@ public class ChatController {
     @Autowired
     private MessageService messageService;
 
-    private static final DateTimeFormatter formatter = 
+    private static final DateTimeFormatter formatter =
         DateTimeFormatter.ofPattern("hh:mm a");
 
     @MessageMapping("/chat.sendMessage")
@@ -47,7 +46,6 @@ public class ChatController {
             User user = userOpt.get();
             ChatRoom room = roomOpt.get();
 
-            // Save to database
             messageService.saveMessage(user, room, chatMessage.getContent(), "TEXT");
 
             chatMessage.setSender(user.getDisplayName());
@@ -69,7 +67,7 @@ public class ChatController {
 
         userService.setOnlineStatus(username, true);
 
-        userOpt(username).ifPresent(user -> {
+        userService.findByUsername(username).ifPresent(user -> {
             chatMessage.setSender(user.getDisplayName());
             chatMessage.setAvatarColor(user.getAvatarColor());
             chatMessage.setType(ChatMessage.MessageType.JOIN);
@@ -81,13 +79,35 @@ public class ChatController {
     @MessageMapping("/chat.typing")
     public void typing(@Payload ChatMessage chatMessage, Principal principal) {
         String username = principal.getName();
-        userOpt(username).ifPresent(user -> {
+        userService.findByUsername(username).ifPresent(user -> {
             chatMessage.setSender(user.getDisplayName());
-            messagingTemplate.convertAndSend("/topic/" + chatMessage.getRoom() + ".typing", chatMessage);
+            messagingTemplate.convertAndSend(
+                "/topic/" + chatMessage.getRoom() + ".typing", chatMessage);
         });
     }
 
-    private Optional<User> userOpt(String username) {
-        return userService.findByUsername(username);
+    @MessageMapping("/chat.private")
+    public void privateMessage(@Payload ChatMessage chatMessage, Principal principal) {
+        String username = principal.getName();
+        userService.findByUsername(username).ifPresent(user -> {
+            chatMessage.setSender(user.getDisplayName());
+            chatMessage.setAvatarColor(user.getAvatarColor());
+            chatMessage.setTimestamp(LocalDateTime.now().format(formatter));
+            chatMessage.setType(ChatMessage.MessageType.CHAT);
+
+            // Send to receiver
+            messagingTemplate.convertAndSendToUser(
+                chatMessage.getReceiver(),
+                "/queue/private",
+                chatMessage
+            );
+
+            // Send back to sender
+            messagingTemplate.convertAndSendToUser(
+                username,
+                "/queue/private",
+                chatMessage
+            );
+        });
     }
 }

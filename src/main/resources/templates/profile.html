@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Connectify - Profile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: white;
+        }
+        .navbar {
+            padding: 16px 32px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 { font-size: 1.5rem; }
+        .back-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .profile-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px;
+        }
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .avatar-big {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+        .avatar-info h2 { font-size: 1.5rem; margin-bottom: 4px; }
+        .avatar-info p { color: #888; font-size: 0.9rem; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; color: #aaa; font-size: 0.85rem; margin-bottom: 8px; }
+        input, textarea {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.3s;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus { border-color: #7c3aed; }
+        textarea { resize: vertical; min-height: 80px; }
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .color-opt {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: border 0.2s;
+        }
+        .color-opt.selected { border-color: white; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #7c3aed, #3478f6);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn:hover { opacity: 0.9; }
+        .success {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #10b981;
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+        ::placeholder { color: rgba(255,255,255,0.25); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>💬 Connectify</h1>
+        <a href="/" class="back-btn">← Back to Rooms</a>
+    </nav>
+
+    <div class="container">
+        <div class="profile-card">
+            <div class="avatar-section">
+                <div class="avatar-big"
+                     th:style="'background:' + ${user.avatarColor}"
+                     th:text="${#strings.substring(user.displayName, 0, 1)}"></div>
+                <div class="avatar-info">
+                    <h2 th:text="${user.displayName}"></h2>
+                    <p th:text="'@' + ${user.username}"></p>
+                </div>
+            </div>
+
+            <div th:if="${param.updated}" class="success">
+                Profile updated successfully! ✅
+            </div>
+
+            <form th:action="@{/profile}" method="post">
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" name="displayName" th:value="${user.displayName}" required/>
+                </div>
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea name="bio" placeholder="Tell something about yourself..." th:text="${user.bio}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Avatar Color</label>
+                    <div class="color-picker">
+                        <div class="color-opt" style="background:#3478f6"
+                             th:classappend="${user.avatarColor == '#3478f6'} ? 'selected'"
+                             onclick="selectColor('#3478f6', this)"></div>
+                        <div class="color-opt" style="background:#7c3aed"
+                             th:classappend="${user.avatarColor == '#7c3aed'} ? 'selected'"
+                             onclick="selectColor('#7c3aed', this)"></div>
+                        <div class="color-opt" style="background:#ef4444"
+                             th:classappend="${user.avatarColor == '#ef4444'} ? 'selected'"
+                             onclick="selectColor('#ef4444', this)"></div>
+                        <div class="color-opt" style="background:#f59e0b"
+                             th:classappend="${user.avatarColor == '#f59e0b'} ? 'selected'"
+                             onclick="selectColor('#f59e0b', this)"></div>
+                        <div class="color-opt" style="background:#10b981"
+                             th:classappend="${user.avatarColor == '#10b981'} ? 'selected'"
+                             onclick="selectColor('#10b981', this)"></div>
+                        <div class="color-opt" style="background:#ec4899"
+                             th:classappend="${user.avatarColor == '#ec4899'} ? 'selected'"
+                             onclick="selectColor('#ec4899', this)"></div>
+                        <div class="color-opt" style="background:#06b6d4"
+                             th:classappend="${user.avatarColor == '#06b6d4'} ? 'selected'"
+                             onclick="selectColor('#06b6d4', this)"></div>
+                        <div class="color-opt" style="background:#f97316"
+                             th:classappend="${user.avatarColor == '#f97316'} ? 'selected'"
+                             onclick="selectColor('#f97316', this)"></div>
+                    </div>
+                    <input type="hidden" name="avatarColor" id="avatarColor"
+                           th:value="${user.avatarColor}"/>
+                </div>
+                <button type="submit" class="btn">Save Profile ✓</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function selectColor(color, el) {
+            document.querySelectorAll('.color-opt').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('avatarColor').value = color;
+            document.querySelector('.avatar-big').style.background = color;
+        }
+    </script>
+</body>
+</html>

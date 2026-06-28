@@ -55,4 +55,16 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    public User updateProfile(String username, String displayName, 
+                               String bio, String avatarColor) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setDisplayName(displayName);
+        user.setBio(bio);
+        if (avatarColor != null && !avatarColor.isEmpty()) {
+            user.setAvatarColor(avatarColor);
+        }
+        return userRepository.save(user);
+    }
 }

@@ -21,6 +21,7 @@ public class User {
 
     private boolean online = false;
     private String avatarColor;
+    private String bio;
 
     public Long getId() { return id; }
     public String getUsername() { return username; }
@@ -33,4 +34,6 @@ public class User {
     public void setOnline(boolean online) { this.online = online; }
     public String getAvatarColor() { return avatarColor; }
     public void setAvatarColor(String avatarColor) { this.avatarColor = avatarColor; }
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
 }
